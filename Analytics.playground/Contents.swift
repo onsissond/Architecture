@@ -1,7 +1,7 @@
 
-typealias FBEvent = ()
-typealias FIREvent = ()
-typealias FunnelEvent = ()
+typealias FBEvent = [String: String]
+typealias FIREvent = [String: String]
+typealias FunnelEvent = [String: String]
 
 enum Event {
     case facebook(FBEvent)
@@ -55,10 +55,14 @@ analytics.logEvent(.facebook(FBEvent()))
 // Один ивент в набор аналитик
 extension Event {
     var facebook: FBEvent? {
-        guard case .firebase(let event) = self else {
+        switch self {
+        case .firebase(let firEvent):
+            return firEvent
+        case .funnel(let funnelEvent):
+            return funnelEvent.asFacebook
+        default:
             return nil
         }
-        return event
     }
 
     var firebase: FIREvent? {
@@ -66,11 +70,21 @@ extension Event {
         case .firebase(let firEvent):
             return firEvent
         case .funnel(let funnelEvent):
-            // Mapping
-            return funnelEvent as! FIREvent
+            return funnelEvent.asFirebase
         default:
             return nil
         }
+    }
+}
+
+// Mapping
+extension FunnelEvent {
+    var asFirebase: FIREvent {
+        self as! FIREvent
+    }
+
+    var asFacebook: FBEvent {
+        self as! FBEvent
     }
 }
 
