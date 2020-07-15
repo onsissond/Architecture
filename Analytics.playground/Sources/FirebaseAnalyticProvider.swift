@@ -1,19 +1,30 @@
 
-public struct FirebaseAnalyticProvider {
-    private let _firebase: (FIREvent) -> Void = { _ in }
-    private let _mutator: Mutator<FIREvent>
+public typealias Mutator<Event> = (Event) -> Event
 
-    init(mutator: @escaping Mutator<FIREvent> = FirebaseMutationProvider.mutate) {
-        _mutator = mutator
+public enum FirebaseMutationProvider {
+    public static var mutator: Mutator<FIREvent> =
+        FirebaseMutationProvider.addKey
+}
+
+private extension FirebaseMutationProvider {
+    static var addKey: Mutator<FIREvent> = {
+        var dic = $0
+        dic["test"] = "value"
+        return dic
     }
 }
 
-extension FirebaseAnalyticProvider: AnalyticProvider {
-    public func logEvent(_ event: Event) {
-        guard let firEvent = event.firebase else {
-            return
+public enum FirebaseAnalyticProvider {
+    public static func make(
+        logEvent: @escaping (FIREvent) -> Void,
+        mutator: @escaping Mutator<FIREvent> = FirebaseMutationProvider.mutator
+    ) -> LogEvent {
+        return {
+            guard let firEvent = $0.firebase else {
+                return
+            }
+            logEvent(mutator(firEvent))
         }
-        _firebase(_mutator(firEvent))
     }
 }
 
@@ -23,27 +34,5 @@ extension Event {
             return nil
         }
         return event
-    }
-}
-
-
-typealias LogEvent = (Event) -> Void
-typealias Mutator<Event> = (Event) -> Event
-
-enum FirebaseMutationProvider {
-    static var mutate: Mutator<FIREvent> = { $0 }
-}
-
-public enum FirebaseAnalytic {
-    static func make(
-        firebase: @escaping (FIREvent) -> Void,
-        mutator: @escaping Mutator<FIREvent>
-    ) -> LogEvent {
-        return {
-            guard let firEvent = $0.firebase else {
-                return
-            }
-            firebase(mutator(firEvent))
-        }
     }
 }

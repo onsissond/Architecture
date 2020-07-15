@@ -1,17 +1,11 @@
-public protocol AnalyticProvider {
-    func logEvent(_ event: Event)
-}
+public typealias LogEvent = (Event) -> Void
 
-public struct AnalyticsFacade {
-    private let _providers: [AnalyticProvider]
-
-    init(providers: AnalyticProvider...) {
-        _providers = providers
-    }
-}
-
-extension AnalyticsFacade: AnalyticProvider {
-    public func logEvent(_ event: Event) {
-        _providers.forEach { $0.logEvent(event) }
+public enum AppAnalyticProvider {
+    public static func make(
+        providers: LogEvent...
+    ) -> LogEvent {
+        return { event in
+            providers.forEach { $0(event) }
+        }
     }
 }

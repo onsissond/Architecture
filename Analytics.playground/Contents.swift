@@ -1,4 +1,3 @@
 
 let analytics = AnalyticsFactory.createAnalyticProvider()
-print()
-analytics.logEvent(.facebook(FBEvent()))
+analytics(.firebase(FIREvent()))
